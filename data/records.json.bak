@@ -5,9 +5,19 @@
       "id": "6ca959de-cdaa-4772-ac52-f07fdaa2efa3",
       "date": "2026-01-28",
       "created_at": "2026-01-28T09:04:57.233800",
-      "updated_at": "2026-01-28T09:04:57.233800",
+      "updated_at": "2026-01-28T09:49:43.689026",
       "text": "",
-      "images": [],
+      "images": [
+        {
+          "id": "cdc04a00-903d-44ea-bd07-d9eac7a07e3b",
+          "filename": "hana_white2.png",
+          "path": "data/images\\2026\\01\\b76b656f-b748-4e3e-b0a6-ddc2210b6d67.png",
+          "thumbnail_path": "data/images\\2026\\01\\b76b656f-b748-4e3e-b0a6-ddc2210b6d67_thumb.png",
+          "uploaded_at": "2026-01-28T09:49:43.689026",
+          "size_bytes": 392,
+          "caption": null
+        }
+      ],
       "tags": [],
       "mood": null
     }
@@ -15,6 +25,6 @@
   "metadata": {
     "total_records": 1,
     "first_record_date": "2026-01-28",
-    "last_updated": "2026-01-28T09:04:57.250349"
+    "last_updated": "2026-01-28T09:49:43.691229"
   }
 }
