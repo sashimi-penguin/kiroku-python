@@ -1,30 +1,20 @@
 {
   "version": "1.0",
   "records": {
-    "2026-01-04": {
-      "id": "5b401e51-5845-4bca-a92d-95a675a80210",
-      "date": "2026-01-04",
-      "created_at": "2026-01-27T11:08:55.904552",
-      "updated_at": "2026-01-27T11:13:08.165684",
-      "text": "今日は勉強をしたよ",
-      "images": [
-        {
-          "id": "98bffecc-3ff1-4eca-b567-759187d1b47a",
-          "filename": "unnamed.jpg",
-          "path": "data/images\\2026\\01\\6b2dd3c0-948a-40e7-bc98-e127792de6f8.jpg",
-          "thumbnail_path": "data/images\\2026\\01\\6b2dd3c0-948a-40e7-bc98-e127792de6f8_thumb.jpg",
-          "uploaded_at": "2026-01-27T11:12:41.317372",
-          "size_bytes": 69407,
-          "caption": null
-        }
-      ],
+    "2026-01-28": {
+      "id": "6ca959de-cdaa-4772-ac52-f07fdaa2efa3",
+      "date": "2026-01-28",
+      "created_at": "2026-01-28T09:04:57.233800",
+      "updated_at": "2026-01-28T09:04:57.233800",
+      "text": "",
+      "images": [],
       "tags": [],
-      "mood": "good"
+      "mood": null
     }
   },
   "metadata": {
     "total_records": 1,
-    "first_record_date": "2026-01-04",
-    "last_updated": "2026-01-27T11:13:08.167758"
+    "first_record_date": "2026-01-28",
+    "last_updated": "2026-01-28T09:04:57.250349"
   }
 }

@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 from datetime import datetime, timedelta
 import calendar
+from .styles import AppStyles
 
 
 class CalendarView:
@@ -28,47 +29,56 @@ class CalendarView:
 
     def _create_widgets(self):
         """ウィジェットを作成"""
+        # メインコンテナ
+        self.container = ttk.Frame(self.parent, style="Card.TFrame")
+        self.container.pack(fill=tk.BOTH, expand=True)
+
         # ナビゲーションフレーム
-        self.nav_frame = ttk.Frame(self.parent)
+        self.nav_frame = ttk.Frame(self.container, style="Card.TFrame")
 
         self.prev_button = ttk.Button(
             self.nav_frame,
             text="<",
             width=3,
-            command=self._prev_month
+            command=self._prev_month,
+            style="TButton"
         )
 
         self.today_button = ttk.Button(
             self.nav_frame,
             text="今日",
-            command=self._goto_today
+            command=self._goto_today,
+            style="TButton"
         )
 
         self.next_button = ttk.Button(
             self.nav_frame,
             text=">",
             width=3,
-            command=self._next_month
+            command=self._next_month,
+            style="TButton"
         )
 
         # 年月表示
         self.month_label = ttk.Label(
-            self.parent,
+            self.container,
             text=self._get_month_label(),
-            font=("", 12, "bold")
+            font=("Yu Gothic UI", 14, "bold"),
+            style="Card.TLabel",
+            anchor="center"
         )
 
         # カレンダーグリッドフレーム
-        self.calendar_frame = ttk.Frame(self.parent)
+        self.calendar_frame = ttk.Frame(self.container, style="Card.TFrame")
 
     def _layout_widgets(self):
         """ウィジェットをレイアウト"""
-        self.nav_frame.pack(fill=tk.X, pady=(0, 10))
-        self.prev_button.pack(side=tk.LEFT, padx=2)
-        self.today_button.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=2)
-        self.next_button.pack(side=tk.RIGHT, padx=2)
+        self.nav_frame.pack(fill=tk.X, pady=(0, 15))
+        self.prev_button.pack(side=tk.LEFT)
+        self.today_button.pack(side=tk.LEFT, padx=5)
+        self.next_button.pack(side=tk.RIGHT)
 
-        self.month_label.pack(pady=(0, 10))
+        self.month_label.pack(fill=tk.X, pady=(0, 15))
         self.calendar_frame.pack(fill=tk.BOTH, expand=True)
 
     def _get_month_label(self) -> str:
@@ -83,14 +93,18 @@ class CalendarView:
 
         # 曜日ヘッダー
         weekdays = ["日", "月", "火", "水", "木", "金", "土"]
-        for col, day in enumerate(weekdays):
+        colors = ["#E91E63", "#757575", "#757575", "#757575", "#757575", "#757575", "#3F51B5"]
+        
+        for col, (day, color) in enumerate(zip(weekdays, colors)):
             label = ttk.Label(
                 self.calendar_frame,
                 text=day,
-                font=("", 9, "bold"),
-                anchor=tk.CENTER
+                font=("Yu Gothic UI", 10, "bold"),
+                foreground=color,
+                anchor=tk.CENTER,
+                style="Card.TLabel"
             )
-            label.grid(row=0, column=col, sticky="nsew", padx=1, pady=1)
+            label.grid(row=0, column=col, sticky="nsew", pady=(0, 5))
 
         # カレンダーデータを取得
         cal = calendar.monthcalendar(self.current_year, self.current_month)
@@ -100,8 +114,8 @@ class CalendarView:
             for col_idx, day in enumerate(week):
                 if day == 0:
                     # 空のセル
-                    label = ttk.Label(self.calendar_frame, text="")
-                    label.grid(row=row_idx + 1, column=col_idx, sticky="nsew", padx=1, pady=1)
+                    label = ttk.Label(self.calendar_frame, text="", style="Card.TLabel")
+                    label.grid(row=row_idx + 1, column=col_idx, sticky="nsew", padx=2, pady=2)
                 else:
                     # 日付ボタン
                     date_str = f"{self.current_year:04d}-{self.current_month:02d}-{day:02d}"
@@ -118,31 +132,54 @@ class CalendarView:
                     # 選択された日かどうか
                     is_selected = date_str == self.selected_date
 
+                    # 見た目の設定
+                    bg_color = AppStyles.COLOR_SURFACE
+                    fg_color = AppStyles.COLOR_TEXT
+                    font_style = ("Yu Gothic UI", 10)
+                    relief = "flat"
+                    bd = 0
+                    
+                    if is_selected:
+                        bg_color = AppStyles.COLOR_PRIMARY
+                        fg_color = "white"
+                        font_style = ("Yu Gothic UI", 10, "bold")
+                    elif is_today:
+                        bg_color = "#E3F2FD"      # 薄い青
+                        fg_color = AppStyles.COLOR_PRIMARY
+                        font_style = ("Yu Gothic UI", 10, "bold")
+                        
+                    elif has_record:
+                        bg_color = "#E8F5E9"      # 薄い緑
+                        fg_color = "#2E7D32"
+
+                    # 土日の色調整（選択中以外）
+                    if not is_selected and not has_record and not is_today:
+                        if col_idx == 0:  # 日
+                            fg_color = "#E91E63"
+                        elif col_idx == 6:  # 土
+                            fg_color = "#3F51B5"
+
+                    # Tkinter標準ボタンを使用（背景色を細かく制御するため）
+                    # ただしフラットに見えるように調整
                     button = tk.Button(
                         self.calendar_frame,
                         text=str(day),
-                        width=4,
-                        height=2,
-                        command=lambda d=date_str: self._on_date_clicked(d)
+                        bg=bg_color,
+                        fg=fg_color,
+                        font=font_style,
+                        relief=relief,
+                        borderwidth=bd,
+                        activebackground=AppStyles.COLOR_PRIMARY if is_selected else "#EDEDED",
+                        activeforeground="white" if is_selected else fg_color,
+                        command=lambda d=date_str: self._on_date_clicked(d),
+                        cursor="hand2"
                     )
-
-                    # スタイル設定
-                    if is_selected:
-                        button.config(bg="#4A90E2", fg="white", font=("", 9, "bold"))
-                    elif is_today:
-                        button.config(bg="#E8F4F8", font=("", 9, "bold"))
-                    elif has_record:
-                        button.config(bg="#D4EDDA", font=("", 9))
-                    else:
-                        button.config(bg="white", font=("", 9))
-
-                    # 日曜日は赤、土曜日は青
-                    if col_idx == 0 and not is_selected:  # 日曜日
-                        button.config(fg="red")
-                    elif col_idx == 6 and not is_selected:  # 土曜日
-                        button.config(fg="blue")
-
-                    button.grid(row=row_idx + 1, column=col_idx, sticky="nsew", padx=1, pady=1)
+                    
+                    # 記録がある場合は下にインジケータ的な装飾を入れたいが、
+                    # ボタンだと難しいので、色で表現する方針を維持。
+                    
+                    # グリッド配置
+                    button.grid(row=row_idx + 1, column=col_idx, sticky="nsew", padx=2, pady=2, ipady=5)
 
         # グリッドの重み設定
         for i in range(7):

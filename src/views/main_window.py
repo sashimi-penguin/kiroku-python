@@ -25,77 +25,123 @@ class MainWindow:
 
     def _create_widgets(self):
         """ウィジェットを作成"""
-        # メインフレーム
+        # メインフレーム（全体）
         self.main_frame = ttk.Frame(self.root)
 
-        # 左側: カレンダービュー
-        self.calendar_frame = ttk.LabelFrame(self.main_frame, text="カレンダー", padding=10)
+        # --- ヘッダーエリア ---
+        self.header_frame = ttk.Frame(self.main_frame)
+        self.app_title = ttk.Label(
+            self.header_frame,
+            text="Record Keeper",
+            style="Header.TLabel"
+        )
+        self.current_date_label = ttk.Label(
+            self.header_frame,
+            text=f"{datetime.now().strftime('%Y年%m月%d日')}",
+            font=("", 10),
+            foreground="#757575"
+        )
+
+        # --- コンテンツエリア（左右分割）---
+        self.content_frame = ttk.Frame(self.main_frame)
+
+        # 左側: カレンダー（カードスタイル）
+        self.left_panel = ttk.Frame(self.content_frame, style="Card.TFrame", padding=15)
+        # 影のようなボーダー効果（オプション）
+        self.left_panel_border = ttk.Frame(self.content_frame, style="TFrame") 
+        
+        self.calendar_header_label = ttk.Label(
+            self.left_panel, 
+            text="CALENDAR", 
+            style="CardHeader.TLabel"
+        )
+        
         self.calendar_view = CalendarView(
-            self.calendar_frame,
+            self.left_panel,
             self.record_controller,
             on_date_select=self._on_date_selected
         )
 
-        # 右側: 記録表示・編集エリア
-        self.right_frame = ttk.Frame(self.main_frame)
-
-        # 選択日表示
-        self.date_label_frame = ttk.Frame(self.right_frame)
+        # 右側: 詳細・表示エリア
+        self.right_panel = ttk.Frame(self.content_frame, style="Card.TFrame", padding=20)
+        
+        # 日付見出し
+        self.date_header_frame = ttk.Frame(self.right_panel, style="Card.TFrame")
         self.date_label = ttk.Label(
-            self.date_label_frame,
-            text=f"選択日: {self.selected_date}",
-            font=("", 14, "bold")
+            self.date_header_frame,
+            text=self._format_date(self.selected_date),
+            style="CardHeader.TLabel",
+            font=("Yu Gothic UI", 16, "bold")
         )
-
-        # ボタンフレーム
-        self.button_frame = ttk.Frame(self.right_frame)
+        
+        # 操作ボタン（右揃え）
+        self.button_frame = ttk.Frame(self.date_header_frame, style="Card.TFrame")
         self.edit_button = ttk.Button(
             self.button_frame,
-            text="記録を追加/編集",
-            command=self._open_editor
+            text="✎ 編集する",
+            command=self._open_editor,
+            style="Primary.TButton"
         )
         self.export_button = ttk.Button(
             self.button_frame,
-            text="Markdownエクスポート",
-            command=self._export_markdown
+            text="↓ エクスポート",
+            command=self._export_markdown,
+            style="TButton"
         )
 
-        # 記録ビューアー
-        self.viewer_frame = ttk.LabelFrame(self.right_frame, text="記録プレビュー", padding=10)
-        self.record_viewer = RecordViewer(self.viewer_frame, self.record_controller)
+        # 記録ビューアーエリア
+        self.viewer_container = ttk.Frame(self.right_panel, style="Card.TFrame")
+        self.record_viewer = RecordViewer(self.viewer_container, self.record_controller)
 
     def _layout_widgets(self):
         """ウィジェットをレイアウト"""
-        self.main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        self.main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
 
-        # 左側カレンダー（30%）
-        self.calendar_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
+        # ヘッダー配置
+        self.header_frame.pack(fill=tk.X, pady=(0, 20))
+        self.app_title.pack(side=tk.LEFT)
+        self.current_date_label.pack(side=tk.RIGHT, anchor=tk.S, pady=(0, 5))
 
-        # 右側エリア（70%）
-        self.right_frame.grid(row=0, column=1, sticky="nsew")
+        # コンテンツエリア配置
+        self.content_frame.pack(fill=tk.BOTH, expand=True)
+
+        # カレンダー（左）
+        self.left_panel.grid(row=0, column=0, sticky="nsew", padx=(0, 15))
+        self.calendar_header_label.pack(anchor=tk.W, pady=(0, 15))
+        # CalendarView自体は内部でpackする想定だが、ラップが必要ならここで行う
+
+        # 詳細エリア（右）
+        self.right_panel.grid(row=0, column=1, sticky="nsew")
+        
+        # 右側パネル内のレイアウト
+        self.date_header_frame.pack(fill=tk.X, pady=(0, 15))
+        self.date_label.pack(side=tk.LEFT)
+        
+        self.button_frame.pack(side=tk.RIGHT)
+        self.export_button.pack(side=tk.LEFT, padx=(0, 10))
+        self.edit_button.pack(side=tk.LEFT)
+        
+        ttk.Separator(self.right_panel, orient="horizontal").pack(fill=tk.X, pady=(0, 15))
+        
+        self.viewer_container.pack(fill=tk.BOTH, expand=True)
 
         # グリッドの重み設定
-        self.main_frame.columnconfigure(0, weight=3)
-        self.main_frame.columnconfigure(1, weight=7)
-        self.main_frame.rowconfigure(0, weight=1)
+        self.content_frame.columnconfigure(0, weight=4)  # カレンダー幅
+        self.content_frame.columnconfigure(1, weight=6)  # 詳細幅
+        self.content_frame.rowconfigure(0, weight=1)
 
-        # 右側エリアのレイアウト
-        self.date_label_frame.pack(fill=tk.X, pady=(0, 10))
-        self.date_label.pack(side=tk.LEFT)
-
-        self.button_frame.pack(fill=tk.X, pady=(0, 10))
-        self.edit_button.pack(side=tk.LEFT, padx=(0, 5))
-        self.export_button.pack(side=tk.LEFT)
-
-        self.viewer_frame.pack(fill=tk.BOTH, expand=True)
-
-        # 右側エリアの内部レイアウト
-        self.right_frame.rowconfigure(2, weight=1)
+    def _format_date(self, date_str):
+        """日付文字列を整形 (YYYY-MM-DD -> YYYY年MM月DD日)"""
+        try:
+            dt = datetime.strptime(date_str, "%Y-%m-%d")
+            return dt.strftime("%Y年%m月%d日")
+        except:
+            return date_str
 
     def _on_date_selected(self, date: str):
         """カレンダーで日付が選択された時"""
         self.selected_date = date
-        self.date_label.config(text=f"選択日: {self.selected_date}")
+        self.date_label.config(text=self._format_date(self.selected_date))
         self._refresh_viewer()
 
     def _refresh_viewer(self):

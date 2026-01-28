@@ -4,6 +4,7 @@ from tkinter import messagebox
 import os
 from .controllers.record_controller import RecordController
 from .views.main_window import MainWindow
+from .views.styles import AppStyles
 
 
 class App:
@@ -12,7 +13,10 @@ class App:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("毎日の記録ツール")
-        self.root.geometry("1000x700")
+        self.root.geometry("1100x750")  # サイズを少し大きくする
+
+        # スタイルの適用
+        AppStyles.setup_styles(self.root)
 
         # ディレクトリ構造を初期化
         self._initialize_directories()

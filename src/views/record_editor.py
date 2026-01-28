@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, filedialog, messagebox
 from PIL import Image, ImageTk
 import os
+from .styles import AppStyles
 
 
 class RecordEditor:
@@ -27,101 +28,148 @@ class RecordEditor:
 
     def _create_widgets(self):
         """ウィジェットを作成"""
-        # メインフレーム
-        self.main_frame = ttk.Frame(self.parent, padding=10)
+        # 親ウィンドウの背景色設定
+        self.parent.configure(bg=AppStyles.COLOR_BACKGROUND)
 
+        # メインスクロール可能なコンテナを作るべきだが、ここではシンプルにFrame
+        # 下地としてCardスタイルを使う
+        self.main_container = ttk.Frame(self.parent, style="TFrame")
+        self.main_container.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+
+        # --- コンテンツエリア ---
+        self.content_frame = ttk.Frame(self.main_container, style="Card.TFrame", padding=20)
+        
         # テキスト入力エリア
-        self.text_frame = ttk.LabelFrame(self.main_frame, text="記録テキスト（普通のテキストでOK、Markdownも使えます）", padding=10)
+        self.text_label = ttk.Label(
+            self.content_frame, 
+            text="今日の記録", 
+            style="CardHeader.TLabel"
+        )
+        self.text_sub_label = ttk.Label(
+            self.content_frame, 
+            text="Markdown記法が使えます", 
+            font=("Yu Gothic UI", 9),
+            foreground="#757575",
+            style="Card.TLabel"
+        )
+        
         self.text_area = scrolledtext.ScrolledText(
-            self.text_frame,
+            self.content_frame,
             wrap=tk.WORD,
             width=70,
-            height=15,
-            font=("", 10)
+            height=12,
+            font=("Yu Gothic UI", 11),
+            bd=1,
+            relief="solid"
         )
 
-        # タグ入力
-        self.tags_frame = ttk.Frame(self.main_frame)
-        ttk.Label(self.tags_frame, text="タグ (カンマ区切り):").pack(side=tk.LEFT, padx=(0, 5))
-        self.tags_entry = ttk.Entry(self.tags_frame, width=40)
-        self.tags_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
-
-        # 気分選択
-        self.mood_frame = ttk.Frame(self.main_frame)
-        ttk.Label(self.mood_frame, text="気分:").pack(side=tk.LEFT, padx=(0, 5))
+        # メタデータエリア（タグ・気分）
+        self.meta_frame = ttk.Frame(self.content_frame, style="Card.TFrame")
+        
+        # 気分
+        self.mood_frame = ttk.Frame(self.meta_frame, style="Card.TFrame")
+        ttk.Label(self.mood_frame, text="気分", style="Card.TLabel").pack(anchor=tk.W)
         self.mood_var = tk.StringVar(value="")
         self.mood_combo = ttk.Combobox(
             self.mood_frame,
             textvariable=self.mood_var,
-            values=["", "good", "neutral", "bad"],
+            values=["good", "neutral", "bad"],
             state="readonly",
-            width=15
+            width=15,
+            font=("Yu Gothic UI", 10)
         )
-        self.mood_combo.pack(side=tk.LEFT)
+        self.mood_combo.pack(fill=tk.X, pady=(5, 0))
+
+        # タグ
+        self.tags_frame = ttk.Frame(self.meta_frame, style="Card.TFrame")
+        ttk.Label(self.tags_frame, text="タグ (カンマ区切り)", style="Card.TLabel").pack(anchor=tk.W)
+        self.tags_entry = ttk.Entry(
+            self.tags_frame, 
+            width=40,
+            font=("Yu Gothic UI", 10)
+        )
+        self.tags_entry.pack(fill=tk.X, pady=(5, 0))
 
         # 画像エリア
-        self.image_frame = ttk.LabelFrame(self.main_frame, text="添付画像", padding=10)
-
+        self.image_frame = ttk.Frame(self.content_frame, style="Card.TFrame")
+        self.image_header = ttk.Label(
+            self.image_frame,
+            text="添付画像",
+            style="CardHeader.TLabel"
+        )
+        
         # 画像リストフレーム（スクロール可能）
-        self.image_list_canvas = tk.Canvas(self.image_frame, height=150)
+        self.image_list_canvas = tk.Canvas(self.image_frame, height=120, bg="white", highlightthickness=0)
         self.image_list_scrollbar = ttk.Scrollbar(
             self.image_frame,
             orient=tk.HORIZONTAL,
             command=self.image_list_canvas.xview
         )
         self.image_list_canvas.configure(xscrollcommand=self.image_list_scrollbar.set)
-
-        self.image_list_frame = ttk.Frame(self.image_list_canvas)
+        
+        self.image_list_frame = ttk.Frame(self.image_list_canvas, style="Card.TFrame")
         self.image_list_canvas.create_window((0, 0), window=self.image_list_frame, anchor=tk.NW)
 
         # 画像追加ボタン
         self.add_image_button = ttk.Button(
             self.image_frame,
-            text="画像を追加",
-            command=self._add_image
+            text="+ 画像を追加",
+            command=self._add_image,
+            style="TButton"
         )
 
-        # ボタンエリア
-        self.button_frame = ttk.Frame(self.main_frame)
+        # ボタンエリア（下部バー）
+        self.button_bar = ttk.Frame(self.main_container, style="TFrame")
+        
         self.save_button = ttk.Button(
-            self.button_frame,
-            text="保存",
-            command=self._save_record
+            self.button_bar,
+            text="保存する",
+            command=self._save_record,
+            style="Primary.TButton"
         )
         self.delete_button = ttk.Button(
-            self.button_frame,
+            self.button_bar,
             text="削除",
-            command=self._delete_record
+            command=self._delete_record,
+            style="TButton"  # 危険な操作だが一旦通常ボタン
         )
         self.cancel_button = ttk.Button(
-            self.button_frame,
+            self.button_bar,
             text="キャンセル",
-            command=self.parent.destroy
+            command=self.parent.destroy,
+            style="TButton"
         )
 
     def _layout_widgets(self):
         """ウィジェットをレイアウト"""
-        self.main_frame.pack(fill=tk.BOTH, expand=True)
+        # 上部のコンテンツエリア
+        self.content_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 20))
 
-        # テキストエリア
-        self.text_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
-        self.text_area.pack(fill=tk.BOTH, expand=True)
+        # テキスト
+        self.text_label.pack(anchor=tk.W)
+        self.text_sub_label.pack(anchor=tk.W, pady=(0, 10))
+        self.text_area.pack(fill=tk.BOTH, expand=True, pady=(0, 20))
 
-        # タグと気分
-        self.tags_frame.pack(fill=tk.X, pady=(0, 5))
-        self.mood_frame.pack(fill=tk.X, pady=(0, 10))
+        # メタデータ（横並び）
+        self.meta_frame.pack(fill=tk.X, pady=(0, 20))
+        self.mood_frame.pack(side=tk.LEFT, fill=tk.X, expand=False, padx=(0, 20))
+        self.tags_frame.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-        # 画像エリア
-        self.image_frame.pack(fill=tk.BOTH, pady=(0, 10))
-        self.image_list_canvas.pack(fill=tk.BOTH, expand=True)
+        # 画像
+        self.image_frame.pack(fill=tk.X)
+        self.image_header.pack(anchor=tk.W, pady=(0, 10))
+        self.image_list_canvas.pack(fill=tk.X, expand=True)
         self.image_list_scrollbar.pack(fill=tk.X)
-        self.add_image_button.pack(pady=(5, 0))
+        self.add_image_button.pack(anchor=tk.W, pady=(10, 0))
 
-        # ボタン
-        self.button_frame.pack(fill=tk.X)
-        self.save_button.pack(side=tk.LEFT, padx=(0, 5))
-        self.delete_button.pack(side=tk.LEFT, padx=(0, 5))
+        # 下部のボタンバー
+        self.button_bar.pack(fill=tk.X)
+        self.save_button.pack(side=tk.RIGHT, padx=(10, 0))
         self.cancel_button.pack(side=tk.RIGHT)
+        self.delete_button.pack(side=tk.LEFT)
+        
+        # キャンバス設定
+        self.image_list_frame.bind("<Configure>", lambda e: self.image_list_canvas.configure(scrollregion=self.image_list_canvas.bbox("all")))
 
     def _load_record(self):
         """既存の記録を読み込み"""
@@ -146,7 +194,7 @@ class RecordEditor:
 
         # 画像を横に並べて表示
         for idx, image in enumerate(self.record.images):
-            image_frame = ttk.Frame(self.image_list_frame, relief=tk.RAISED, borderwidth=1)
+            image_frame = ttk.Frame(self.image_list_frame, style="Card.TFrame")
             image_frame.pack(side=tk.LEFT, padx=5, pady=5)
 
             # サムネイル表示
@@ -157,18 +205,19 @@ class RecordEditor:
                     photo = ImageTk.PhotoImage(img)
                     self.thumbnail_refs.append(photo)
 
-                    img_label = ttk.Label(image_frame, image=photo)
+                    img_label = ttk.Label(image_frame, image=photo, style="Card.TLabel")
                     img_label.pack()
                 else:
-                    ttk.Label(image_frame, text="画像なし").pack()
+                    ttk.Label(image_frame, text="画像なし", style="Card.TLabel").pack()
             except Exception as e:
-                ttk.Label(image_frame, text="読込エラー").pack()
+                ttk.Label(image_frame, text="読込エラー", style="Card.TLabel").pack()
 
             # ファイル名
             ttk.Label(
                 image_frame,
                 text=image.filename[:20] + "..." if len(image.filename) > 20 else image.filename,
-                font=("", 8)
+                font=("Yu Gothic UI", 8),
+                style="Card.TLabel"
             ).pack()
 
             # 削除ボタン
@@ -176,7 +225,8 @@ class RecordEditor:
                 image_frame,
                 text="削除",
                 command=lambda img_id=image.id: self._remove_image(img_id),
-                width=8
+                width=8,
+                style="TButton"
             )
             delete_btn.pack(pady=(2, 0))
 
